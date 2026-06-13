@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="GrandMaster Ferb — Play chess against an AI opponent, get real-time coaching, and review your games with detailed move-by-move analysis.">
+    <title>GrandMaster Ferb — Play & Learn Chess</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>♚</text></svg>">
+</head>
+<body>
+
+    <!-- Header -->
+    <header class="app-header">
+        <div class="logo">
+            <span class="logo-icon">♚</span>
+            <span class="logo-text">GrandMaster <span>Ferb</span></span>
+        </div>
+        <div class="header-controls">
+            <div id="thinking-indicator" class="thinking-indicator">
+                <span>Engine thinking</span>
+                <div class="thinking-dots"><span></span><span></span><span></span></div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Layout -->
+    <main class="app-main">
+
+        <!-- Left Sidebar — Controls & Move List -->
+        <aside class="left-sidebar">
+            <div class="panel" id="play-controls">
+                <div class="panel-header">Game Controls</div>
+                <div class="controls-grid">
+                    <div class="control-row">
+                        <select id="difficulty-select" title="Bot difficulty">
+                            <option value="newbie">🌱 New to Chess</option>
+                            <option value="beginner" selected>♟️ Beginner</option>
+                            <option value="intermediate">⚔️ Intermediate</option>
+                            <option value="advanced">🏆 Advanced</option>
+                        </select>
+                    </div>
+                    <div class="control-row">
+                        <select id="color-select" title="Play as">
+                            <option value="w">⬜ Play as White</option>
+                            <option value="b">⬛ Play as Black</option>
+                        </select>
+                    </div>
+                    <!-- Time Controls -->
+                    <div class="time-control-section">
+                        <div class="section-label">Time Control</div>
+                        <div class="time-grid" id="time-grid">
+                            <div class="time-category">⚡ Bullet</div>
+                            <button class="time-btn" data-time="60" data-inc="0">1 min</button>
+                            <button class="time-btn" data-time="60" data-inc="1">1 | 1</button>
+                            <button class="time-btn" data-time="120" data-inc="1">2 | 1</button>
+                            <div class="time-category">⚡ Blitz</div>
+                            <button class="time-btn" data-time="180" data-inc="0">3 min</button>
+                            <button class="time-btn" data-time="180" data-inc="2">3 | 2</button>
+                            <button class="time-btn active" data-time="300" data-inc="0">5 min</button>
+                            <div class="time-category">🕐 Rapid</div>
+                            <button class="time-btn" data-time="600" data-inc="0">10 min</button>
+                            <button class="time-btn" data-time="600" data-inc="5">10 | 5</button>
+                            <button class="time-btn" data-time="900" data-inc="0">15 min</button>
+                        </div>
+                    </div>
+                    <div class="control-row">
+                        <button class="btn btn-primary" id="btn-new-game">Start Game</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Review Panel (hidden by default) -->
+            <div class="panel review-panel" id="review-panel">
+                <div class="panel-header">Game Review</div>
+                <div id="review-progress"></div>
+                <div id="review-summary"></div>
+                <div id="review-move-counter"></div>
+                <div class="review-nav">
+                    <button class="btn" id="btn-review-first" title="First move">⏮</button>
+                    <button class="btn" id="btn-review-prev" title="Previous move">◀</button>
+                    <button class="btn" id="btn-review-next" title="Next move">▶</button>
+                    <button class="btn" id="btn-review-last" title="Last move">⏭</button>
+                </div>
+                <button class="btn" id="btn-back-to-play">← Back to Game</button>
+            </div>
+        </aside>
+
+        <!-- Center — Chessboard -->
+        <section class="board-section">
+            <!-- Top timer (opponent) -->
+            <div class="timer-bar" id="top-timer-bar">
+                <span class="timer-name" id="top-player-name">Opponent</span>
+                <div class="timer black-timer" id="top-timer">5:00</div>
+            </div>
+
+            <div class="board-and-eval">
+                <div class="eval-bar-container">
+                    <div class="eval-fill" id="eval-fill"></div>
+                    <div class="eval-label" id="eval-label">0.0</div>
+                </div>
+                <div class="board-wrapper">
+                    <div id="turn-indicator" class="turn-indicator hidden"></div>
+                    <div id="board-container"></div>
+                    <div id="board-overlay" class="board-overlay">
+                        <div class="overlay-text">PLEASE SELECT A GAME</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bottom timer (player) -->
+            <div class="timer-bar" id="bottom-timer-bar">
+                <span class="timer-name" id="bottom-player-name">You</span>
+                <div class="timer white-timer" id="bottom-timer">5:00</div>
+            </div>
+
+            <!-- Board Controls (Flip, Resign) -->
+            <div class="board-controls">
+                <div></div> <!-- spacer for flex layout -->
+                <div class="board-buttons">
+                    <button class="btn btn-danger btn-sm" id="btn-resign">⚐ Resign</button>
+                    <button class="btn btn-sm" id="btn-flip">⟳ Flip</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Right Sidebar — Coach -->
+        <aside class="right-sidebar">
+            <div class="panel chat-panel">
+                <div class="panel-header"><img src="img/ferb.png" alt="Ferb" class="coach-icon">Coach Ferb</div>
+                <!-- Single temporary coach message -->
+                <div class="coach-message-area" id="coach-message-area"></div>
+                <!-- Move list -->
+                <div class="coach-move-list-wrap">
+                    <div class="move-list-container" id="move-list"></div>
+                </div>
+                <!-- Game status -->
+                <div class="game-status" id="game-status">Click "Start Game" to start</div>
+                <!-- Review summary (shown after analysis) -->
+                <div id="review-summary" class="hidden"></div>
+                <!-- Game Review button -->
+                <div class="chat-footer hidden" id="coach-review-section">
+                    <button class="btn btn-primary full-width" id="btn-review">Game Review</button>
+                </div>
+            </div>
+        </aside>
+
+    </main>
+
+    <!-- Scripts (order matters) -->
+    <script src="js/chess-engine.js"></script>
+    <script src="js/opening-book.js"></script>
+    <script src="js/ai-engine.js"></script>
+    <script src="js/board-ui.js"></script>
+    <script src="js/game-review.js"></script>
+    <script src="js/bot-chat.js"></script>
+    <script src="js/app.js"></script>
+
+</body>
+</html>
