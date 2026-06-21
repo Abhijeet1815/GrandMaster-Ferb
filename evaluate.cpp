@@ -546,7 +546,7 @@ void queen_evaluation(const Board& b, int& mg_score, int& eg_score) {
         eg_score += eval::eval_data.psts[chess::QUEEN][sq].eg;
 
         uint64_t attack_mask = chess::get_diagonal_slider_attacks(sq, b.occupied) | chess::get_orthogonal_slider_attacks(sq, b.occupied);
-        attack_mask = attack_mask & (!b.white_occupied);
+        attack_mask = attack_mask & (~b.white_occupied);
 
         // Mobility
         int queen_moves = util::count_bits(attack_mask);
